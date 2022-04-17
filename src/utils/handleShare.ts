@@ -52,7 +52,9 @@ export function untilDocumentReady() {
 }
 export async function pasteTextToCompositionFacebook(text: string) {
   const interval = 500
-
+  if (!hasEditor()) {
+    await delay(300)
+  }
   await untilDocumentReady()
 
   const i = postEditorDraftContentSelector()
