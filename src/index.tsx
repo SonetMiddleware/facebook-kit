@@ -24,7 +24,8 @@ import {
   IBindResultData,
   CustomEventId,
   getFacebookId,
-  removeTextInSharePost
+  removeTextInSharePost,
+  decodeMetaData
 } from '@soda/soda-core'
 
 import * as Selectors from './utils/selectors'
@@ -93,13 +94,10 @@ const handlePostImg = async (imgEle: HTMLImageElement, username: string) => {
   } finally {
   }
   console.log('qrcode res: ', res)
-  let metaData: string[] = []
+  let metaData: any = await decodeMetaData(res || '')
   if (res) {
-    metaData = res.split('_')
-    if (metaData.length === 2) {
-      const ipfsHash = metaData[0]
-      console.log('>>>>>hash', ipfsHash)
-      const ipfsOrigin = `https://${ipfsHash}.ipfs.dweb.link/`
+    if (metaData && metaData.tokenId && metaData.source) {
+      const ipfsOrigin = metaData.source
       // bgDiv.style.backgroundImage = `url(${ipfsOrigin})` // blocked by CSP
       imgEle.src = ipfsOrigin
     }
