@@ -95,9 +95,18 @@ const handlePostImg = async (imgEle: HTMLImageElement, username: string) => {
   }
   console.log('qrcode res: ', res)
   let metaData: any = await decodeMetaData(res || '')
+  console.log('qrcode res metaData : ', metaData)
+
   if (res) {
     if (metaData && metaData.tokenId && metaData.source) {
-      const ipfsOrigin = metaData.source
+      //TODO replace with storageService.loadFunc
+      let ipfsOrigin = ''
+      if (metaData.source.startsWith('http')) {
+        ipfsOrigin = metaData.source
+      } else {
+        ipfsOrigin = `https://${metaData.source}.ipfs.dweb.link/`
+      }
+      // const ipfsOrigin = metaData.source
       // bgDiv.style.backgroundImage = `url(${ipfsOrigin})` // blocked by CSP
       imgEle.src = ipfsOrigin
     }
