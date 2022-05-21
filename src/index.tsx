@@ -292,7 +292,7 @@ const handlePostBindingEvent = async (e: any) => {
       content_id: contentId
     })
     console.log('bindPost: ', bindRes)
-    message.success('Bind successfully!')
+    message.success('Bind successful!')
   }
 }
 
