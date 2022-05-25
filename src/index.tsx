@@ -239,10 +239,8 @@ const idWatcher = new MutationObserverWatcher(
 let userId = ''
 //@ts-ignore
 idWatcher.on('onAdd', async () => {
-  console.log(idWatcher.firstDOMProxy.current)
-  const idDom = document.querySelectorAll(
-    `[data-pagelet="LeftRail"] > [data-visualcompletion="ignore-dynamic"]:first-child > div:first-child > ul [role="link"]`
-  )[0]
+  // console.log(idWatcher.firstDOMProxy.current)
+  const idDom = idWatcher.firstDOMProxy.current.querySelector('a')
   if (idDom) {
     //@ts-ignore
     const href = idDom.href
