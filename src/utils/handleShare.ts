@@ -67,7 +67,6 @@ export async function pasteTextToCompositionFacebook(text: string) {
     await delay(interval)
   }
 
-  debugger
   console.log('dispatch paste event.....')
   if ('value' in document.activeElement!) {
     dispatchCustomEvents(i.evaluate()!, 'input', text)

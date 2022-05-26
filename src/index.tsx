@@ -240,7 +240,8 @@ let userId = ''
 //@ts-ignore
 idWatcher.on('onAdd', async () => {
   // console.log(idWatcher.firstDOMProxy.current)
-  const idDom = idWatcher.firstDOMProxy.current.querySelector('a')
+  const idDom =
+    idWatcher.firstDOMProxy.current.parentElement?.querySelector('a')
   if (idDom) {
     //@ts-ignore
     const href = idDom.href
@@ -278,7 +279,7 @@ const handlePostBindingEvent = async (e: any) => {
   const _binding = await getBindingContent()
   console.log('handleBindPost', _binding)
 
-  if (_binding && !_binding.content_id) {
+  if (!_binding || (_binding && !_binding.content_id)) {
     const addr = await getUserAccount()
     const tid = await getFacebookId()
 

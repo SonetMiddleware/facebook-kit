@@ -17,7 +17,7 @@ export const tweetImageFullscreenSelector: () => LiveSelector<E, true> = () =>
   querySelector<E>('[data-pagelet="MediaViewerPhoto"]')
 
 export const myUsernameLiveSelectorPC = new LiveSelector()
-  .querySelectorAll<HTMLAnchorElement>('div[role="main"] div[aria-label]')
+  .querySelectorAll<HTMLAnchorElement>('div[role="main"] span[id="ssrb_composer_start"]')
 
   .filter((x) => x.innerText)
 export const myUsernameLiveSelectorMobile =
