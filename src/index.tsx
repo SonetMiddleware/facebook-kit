@@ -233,13 +233,14 @@ postFormWatcher.on('onAdd', async () => {
 
 //watch and add user id
 const idWatcher = new MutationObserverWatcher(
-  Selectors.myUsernameLiveSelectorPC
+  Selectors.myUsernameLiveSelectorPC()
 )
 
 let userId = ''
 //@ts-ignore
 idWatcher.on('onAdd', async () => {
-  // console.log(idWatcher.firstDOMProxy.current)
+  debugger
+  console.log('idWatcher: ', idWatcher.firstDOMProxy.current)
   const idDom =
     idWatcher.firstDOMProxy.current.parentElement?.querySelector('a')
   if (idDom) {
@@ -278,8 +279,10 @@ const handlePostBindingEvent = async (e: any) => {
   const { contentId } = e.detail
   const _binding = await getBindingContent()
   console.log('handleBindPost', _binding)
-
-  if (!_binding || (_binding && !_binding.content_id)) {
+  if (_binding && _binding.content_id === contentId) {
+    // already binded post
+    return
+  } else if (_binding && !_binding.content_id) {
     const addr = await getUserAccount()
     const tid = await getFacebookId()
 
