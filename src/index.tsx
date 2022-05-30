@@ -8,34 +8,34 @@ import {
 import { isMobileFacebook } from './utils/isMobile'
 import * as ReactDOM from 'react-dom'
 import {
+  BindInfo,
+  getAddress,
+  renderTokenFromCacheMedia,
+  bind2WithWeb2Proof,
+  getBindResult,
+  registerApplication
+} from '@soda/soda-core'
+import {
   startWatch,
   ResourceDialog,
-  ImgMask,
-  BindTwitterIdBox,
-  decodeQrcodeFromImgSrc,
+  InlineTokenToolbar,
+  InlineApplicationBindBox,
   saveLocal,
-  StorageKeys,
-  getUserAccount,
   dispatchPaste,
-  bindPost,
-  PLATFORM,
-  BINDING_CONTENT_TITLE,
-  getTwitterBindResult,
-  IBindResultData,
   CustomEventId,
-  getFacebookId,
-  removeTextInSharePost,
-  decodeMetaData
-} from '@soda/soda-core'
-
+  postShareHandler,
+  removeTextInSharePost
+} from '@soda/soda-core-ui'
 import * as Selectors from './utils/selectors'
 import * as PubSub from 'pubsub-js'
 import { getUserID } from './utils/getProfileIdentifier'
 
 import { message } from 'antd'
 import Logo from './assets/images/logo.png'
-import postShareHandler, { pasteShareTextToEditor } from './utils/handleShare'
+import { newPostTrigger, pasteShareTextToEditor } from './utils/handleShare'
+import { getFacebookId, StorageKeys } from './utils/utils'
 
+const APP_NAME = 'Facebook'
 const posts = new LiveSelector().querySelectorAll<HTMLDivElement>(
   isMobileFacebook ? '.story_body_container > div' : '[role=article] '
 )
@@ -83,48 +83,34 @@ const handlePostImg = async (imgEle: HTMLImageElement, username: string) => {
   // if (imgEle.getBoundingClientRect().width < 300) {
   //   return;
   // }
-  let res
   if (imgSrc.includes('ipfs')) {
     return
   }
-  try {
-    res = await decodeQrcodeFromImgSrc(imgSrc)
-  } catch (err) {
-    console.log(err)
-  } finally {
+  const res = await renderTokenFromCacheMedia(imgSrc, {
+    dom: imgEle,
+    config: { replace: true }
+  })
+  if (res && res.result) {
+    const dom: any = document.createElement('div')
+    dom.style.cssText = spanStyles
+    dom.className = className
+    ReactDOM.render(
+      <InlineTokenToolbar
+        token={res.token}
+        originImgSrc={imgSrc}
+        username={username}
+        app={APP_NAME}
+      />,
+      dom
+    )
+    return dom
   }
-  console.log('qrcode res: ', res)
-  let metaData: any = await decodeMetaData(res || '')
-  console.log('qrcode res metaData : ', metaData)
-
-  if (res) {
-    if (metaData && metaData.tokenId && metaData.source) {
-      //TODO replace with storageService.loadFunc
-      let ipfsOrigin = ''
-      if (metaData.source.startsWith('http')) {
-        ipfsOrigin = metaData.source
-      } else {
-        ipfsOrigin = `https://${metaData.source}.ipfs.dweb.link/`
-      }
-      // const ipfsOrigin = metaData.source
-      // bgDiv.style.backgroundImage = `url(${ipfsOrigin})` // blocked by CSP
-      imgEle.src = ipfsOrigin
-    }
-  }
-  const dom: any = document.createElement('div')
-  dom.style.cssText = spanStyles
-  dom.className = className
-  ReactDOM.render(
-    <ImgMask meta={metaData} originImgSrc={imgSrc} username={username} />,
-    dom
-  )
-  return dom
+  return null
 }
 
 async function handleFacebookImg(node: DOMProxy) {
   const parent = node.current.parentElement
   if (!parent) return []
-  console.log('post text: ', parent.innerText)
   // get author of the post
   const href = parent.querySelectorAll('a')[0]?.href || ''
   const url = href.substr(0, href.indexOf('?'))
@@ -142,7 +128,6 @@ async function handleFacebookImg(node: DOMProxy) {
       imgDivs.push(imgNodes[i].parentElement)
     }
   }
-  console.log('imgDivs: ', imgDivs)
   for (let i = 0; i < imgDivs.length; i++) {
     const imgDiv = imgDivs[i]
     const img = imgDiv!.querySelector('img')!
@@ -156,14 +141,13 @@ async function handleFacebookImg(node: DOMProxy) {
     if (dom) {
       divParent.click() //make sure dom render normally
       divParent?.appendChild(dom)
-      console.log('append here')
     }
   }
 }
 
 // watch fullscreen post image
 const fullScreenImgWatcher = new MutationObserverWatcher(
-  Selectors.tweetImageFullscreenSelector()
+  Selectors.imageFullscreenSelector()
 )
 const handleFullscreenImgPost = async () => {
   const imgEle =
@@ -233,23 +217,20 @@ postFormWatcher.on('onAdd', async () => {
 
 //watch and add user id
 const idWatcher = new MutationObserverWatcher(
-  Selectors.myUsernameLiveSelectorPC
+  Selectors.myUsernameLiveSelectorPC()
 )
 
 let userId = ''
 //@ts-ignore
 idWatcher.on('onAdd', async () => {
-  console.log(idWatcher.firstDOMProxy.current)
-  const idDom = document.querySelectorAll(
-    `[data-pagelet="LeftRail"] > [data-visualcompletion="ignore-dynamic"]:first-child > div:first-child > ul [role="link"]`
-  )[0]
+  const idDom =
+    idWatcher.firstDOMProxy.current.parentElement?.querySelector('a')
   if (idDom) {
     //@ts-ignore
     const href = idDom.href
-    console.log('href', href)
     const id = getUserID(href)
-    console.log('id', id)
     userId = id || ''
+    console.debug('[facebook-hook] app account: ', userId)
     saveLocal(StorageKeys.FACEBOOK_ID, userId)
   }
 })
@@ -260,7 +241,7 @@ const mainWatcher = new MutationObserverWatcher(Selectors.mainContentSelector())
 mainWatcher.on('onAdd', () => {
   console.log('onAdd')
   // handle share on initial
-  postShareHandler()
+  postShareHandler(APP_NAME)
   console.log(mainWatcher.firstDOMProxy)
   const mainDiv: any = document.querySelector('[role=main]')
   // @ts-ignore
@@ -268,49 +249,56 @@ mainWatcher.on('onAdd', () => {
   const dom: any = document.createElement('div')
   dom.id = bindBoxId
   dom.style = 'position:absolute;top:0;right:0;'
-  ReactDOM.render(<BindTwitterIdBox platform={PLATFORM.Facebook} />, dom)
+  ReactDOM.render(<InlineApplicationBindBox app={APP_NAME} />, dom)
   mainDiv.click()
   mainDiv?.appendChild(dom)
   mainWatcher.stopWatch()
 })
 
 const handlePostBindingEvent = async (e: any) => {
-  console.log('PostBinding: ', e.detail)
   const { contentId } = e.detail
   const _binding = await getBindingContent()
-  console.log('handleBindPost', _binding)
-
-  if (_binding && !_binding.content_id) {
-    const addr = await getUserAccount()
-    const tid = await getFacebookId()
-
-    console.log('handleBindPost')
-    const bindRes = await bindPost({
-      addr,
-      tid,
-      platform: PLATFORM.Facebook,
-      content_id: contentId
+  if (!_binding || (_binding && !_binding.contentId)) {
+    const address = await getAddress()
+    const appid = await getFacebookId()
+    const bindRes = await bind2WithWeb2Proof({
+      address,
+      appid,
+      application: APP_NAME,
+      contentId: contentId
     })
-    console.log('bindPost: ', bindRes)
-    message.success('Bind successfully!')
+    if (bindRes) message.success('Bind successful!')
   }
 }
 
-let binding: IBindResultData
+let binding: BindInfo
 async function getBindingContent() {
   if (binding) return binding
-  const addr = await getUserAccount()
-  const tid = await getFacebookId()
-  const bindResult = await getTwitterBindResult({
-    addr,
-    tid
+  const address = await getAddress()
+  const appid = await getFacebookId()
+  const bindResult = await getBindResult({
+    address,
+    application: APP_NAME,
+    appid
   })
-  const _binding = bindResult.find(
-    (item) => item.platform === PLATFORM.Facebook
-  )
+  const _binding = bindResult.find((item) => item.application === APP_NAME)
   if (_binding) {
     binding = _binding
     return binding
+  }
+}
+
+function getUserPage(meta: { appid: string }) {
+  const { appid } = meta
+  const host = getConfig().hostLeadingUrl
+  return `${host}/${appid}`
+}
+export function getConfig() {
+  return {
+    hostIdentifier: 'facebook.com',
+    hostLeadingUrl: 'https://www.facebook.com/',
+    hostLeadingUrlMobile: 'https://m.facebook.com/',
+    icon: 'images/facebook.png'
   }
 }
 
@@ -321,7 +309,10 @@ function main() {
 
   const div = document.createElement('div')
   document.body.appendChild(div)
-  ReactDOM.render(<ResourceDialog publishFunc={pasteShareTextToEditor} />, div)
+  ReactDOM.render(
+    <ResourceDialog app={APP_NAME} publishFunc={pasteShareTextToEditor} />,
+    div
+  )
 
   startWatch(idWatcher)
   startWatch(mainWatcher)
@@ -345,3 +336,16 @@ function main() {
 }
 
 export default main
+
+export const init = () => {
+  registerApplication({
+    name: APP_NAME,
+    meta: {
+      getAccount: getFacebookId,
+      getUserPage,
+      getConfig,
+      newPostTrigger,
+      pasteShareTextToEditor
+    }
+  })
+}

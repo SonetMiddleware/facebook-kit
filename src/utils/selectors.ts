@@ -13,15 +13,12 @@ const querySelector = <T extends E, SingleMode extends boolean = true>(
     SingleMode
   >
 }
-export const tweetImageFullscreenSelector: () => LiveSelector<E, true> = () =>
+export const imageFullscreenSelector: () => LiveSelector<E, true> = () =>
   querySelector<E>('[data-pagelet="MediaViewerPhoto"]')
 
-export const myUsernameLiveSelectorPC = new LiveSelector()
-  .querySelectorAll<HTMLAnchorElement>(
-    `[data-pagelet="LeftRail"] > [data-visualcompletion="ignore-dynamic"]:first-child > div:first-child > ul [role="link"]`
-  )
+export const myUsernameLiveSelectorPC: () => LiveSelector<E, true> = () =>
+  querySelector('div[role="main"] span[id="ssrb_composer_start"]')
 
-  .filter((x) => x.innerText)
 export const myUsernameLiveSelectorMobile =
   new LiveSelector().querySelector<HTMLAnchorElement>(
     '#bookmarks_flyout .mSideMenu > div > ul > li:first-child a, #MComposer a'
