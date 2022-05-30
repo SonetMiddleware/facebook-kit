@@ -258,7 +258,10 @@ mainWatcher.on('onAdd', () => {
 const handlePostBindingEvent = async (e: any) => {
   const { contentId } = e.detail
   const _binding = await getBindingContent()
-  if (!_binding || (_binding && !_binding.contentId)) {
+  if (_binding && _binding.contentId === contentId) {
+    // already binded post
+    return
+  } else if (_binding && !_binding.contentId) {
     const address = await getAddress()
     const appid = await getFacebookId()
     const bindRes = await bind2WithWeb2Proof({
@@ -288,16 +291,16 @@ async function getBindingContent() {
   }
 }
 
-function getUserPage(meta: { appid: string }) {
+function getUserPage(meta: { appid?: string }) {
   const { appid } = meta
   const host = getConfig().hostLeadingUrl
-  return `${host}/${appid}`
+  return `${host}/${appid ? appid : ''}`
 }
 export function getConfig() {
   return {
     hostIdentifier: 'facebook.com',
-    hostLeadingUrl: 'https://www.facebook.com/',
-    hostLeadingUrlMobile: 'https://m.facebook.com/',
+    hostLeadingUrl: 'https://www.facebook.com',
+    hostLeadingUrlMobile: 'https://m.facebook.com',
     icon: 'images/facebook.png'
   }
 }
