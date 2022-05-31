@@ -13,7 +13,7 @@ const querySelector = <T extends E, SingleMode extends boolean = true>(
     SingleMode
   >
 }
-export const tweetImageFullscreenSelector: () => LiveSelector<E, true> = () =>
+export const imageFullscreenSelector: () => LiveSelector<E, true> = () =>
   querySelector<E>('[data-pagelet="MediaViewerPhoto"]')
 
 export const myUsernameLiveSelectorPC: () => LiveSelector<E, true> = () =>

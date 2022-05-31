@@ -15,7 +15,8 @@
   "dependencies": {
     "@dimensiondev/holoflows-kit": "^0.8.0-20210429202414-74fb9a1",
     "@soda/soda-core": "workspace:^0.0.1",
-    "@soda/twitter-kit": "workspace:^1.0.0",
+    "@soda/soda-core-ui": "workspace:^0.0.1",
+    "@soda/soda-util": "workspace:^0.0.1",
     "antd": "^4.19.3",
     "babel-plugin-file-loader": "^2.0.0",
     "father-build": "^1.21.2",
@@ -25,6 +26,10 @@
     "react-dom": "^17.0.1"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.4",
+    "@types/pubsub-js": "^1.8.2",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.4",
     "babel-plugin-import": "^1.13.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.6.3"
