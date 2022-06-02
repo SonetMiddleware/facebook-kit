@@ -1,4 +1,4 @@
-type link = HTMLAnchorElement | null | undefined;
+type link = HTMLAnchorElement | null | undefined
 
 /**
  *
@@ -16,72 +16,78 @@ type link = HTMLAnchorElement | null | undefined;
  */
 export function getProfileIdentifierAtFacebook(
   links: link[] | link,
-  allowCollectInfo?: boolean,
+  allowCollectInfo?: boolean
 ): Pick<any, 'identifier' | 'nickname' | 'avatar'> {
   const unknown = {
     identifier: undefined,
     avatar: undefined,
-    nickname: undefined,
-  };
+    nickname: undefined
+  }
   try {
-    if (!Array.isArray(links)) links = [links];
+    if (!Array.isArray(links)) links = [links]
     const result = links
       .filter((x) => x)
       .map((x) => ({ nickname: x!.innerText, id: getUserID(x!.href), dom: x }))
-      .filter((x) => x.id);
-    const { dom, id, nickname } = result[0] || {};
+      .filter((x) => x.id)
+    const { dom, id, nickname } = result[0] || {}
     if (id) {
-      const result = { platform: 'facebook.com', id };
-      let avatar: string | null = null;
+      const result = { platform: 'facebook.com', id }
+      let avatar: string | null = null
       try {
         const image = dom!
           .closest('.clearfix')!
-          .parentElement!.querySelector('img')!;
-        avatar = image.src;
+          .parentElement!.querySelector('img')!
+        avatar = image.src
         if (
           allowCollectInfo &&
           image.getAttribute('aria-label') === nickname &&
           nickname
         ) {
-          console.log({ nickname, avatarURL: image.src });
+          console.debug('[facebook-hook] getProfileIdentifierAtFacebook: ', {
+            nickname,
+            avatarURL: image.src
+          })
         }
       } catch {}
       try {
-        const image = dom!.querySelector('img')!;
-        avatar = image.src;
+        const image = dom!.querySelector('img')!
+        avatar = image.src
         if (allowCollectInfo && avatar) {
-          console.log({ nickname, avatarURL: image.src });
+          console.debug('[facebook-hook] getProfileIdentifierAtFacebook: ', {
+            nickname,
+            avatarURL: image.src
+          })
         }
       } catch {}
       try {
-        const image = dom!.querySelector('image')!;
-        avatar = image.getAttribute('xlink:href');
+        const image = dom!.querySelector('image')!
+        avatar = image.getAttribute('xlink:href')
       } catch {}
       return {
         identifier: result,
         avatar: avatar ?? undefined,
-        nickname: nickname,
-      };
+        nickname: nickname
+      }
     }
-    return unknown;
+    return unknown
   } catch (e) {
-    console.error(e);
+    console.error(e)
   }
-  return unknown;
+  return unknown
 }
 export function getUserID(x: string) {
-  if (!x) return null;
-  const relative = !x.startsWith('https://') && !x.startsWith('http://');
-  const url = relative ? new URL(x, location.host) : new URL(x);
+  if (!x) return null
+  const relative = !x.startsWith('https://') && !x.startsWith('http://')
+  const url = relative ? new URL(x, location.host) : new URL(x)
 
   if (url.hostname !== 'www.facebook.com' && url.hostname !== 'm.facebook.com')
-    return null;
+    return null
   if (url.pathname.endsWith('.php')) {
-    if (!url.search) return null;
-    const search = new URLSearchParams(url.search);
-    return search.get('id');
+    if (!url.search) return null
+    const search = new URLSearchParams(url.search)
+    return search.get('id')
   }
-  const val = url.pathname.replace(/^\//, '').replace(/\/$/, '').split('/')[0];
-  if (val === 'me') return null;
-  return val;
+  const val = url.pathname.replace(/^\//, '').replace(/\/$/, '').split('/')[0]
+  if (val === 'me') return null
+  return val
 }

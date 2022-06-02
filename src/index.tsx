@@ -39,7 +39,6 @@ const APP_NAME = 'Facebook'
 const posts = new LiveSelector().querySelectorAll<HTMLDivElement>(
   isMobileFacebook ? '.story_body_container > div' : '[role=article] '
 )
-console.log(posts)
 
 function collectPostsFacebookInner() {
   startWatch(
@@ -134,7 +133,7 @@ async function handleFacebookImg(node: DOMProxy) {
     const linkEle = img.closest('a')!
     const divParent = linkEle?.parentElement!
     if (divParent && divParent.querySelector(`.${className}`)) {
-      console.log('has appended')
+      console.debug('[facebook-hook] handleFacebookImg platwin/soda appended')
       return
     }
     const dom = await handlePostImg(img, username)
@@ -200,7 +199,7 @@ const postForm = new LiveSelector().querySelectorAll<HTMLDivElement>(
 const postFormWatcher = new MutationObserverWatcher(postForm)
 //@ts-ignore
 postFormWatcher.on('onAdd', async () => {
-  console.log('postForm: ')
+  console.debug('[facebook-hook] postFormWatcher onAdd ...')
   //TODO better way to find this div
   const emojiDiv =
     document.querySelector('[aria-label="Emoji"]') ||
@@ -239,10 +238,12 @@ const bindBoxId = 'plattwin-bind-box'
 const mainWatcher = new MutationObserverWatcher(Selectors.mainContentSelector())
 //@ts-ignore
 mainWatcher.on('onAdd', () => {
-  console.log('onAdd')
   // handle share on initial
   postShareHandler(APP_NAME)
-  console.log(mainWatcher.firstDOMProxy)
+  console.debug(
+    '[facebook-hook] mainWatcher onAdd: ',
+    mainWatcher.firstDOMProxy
+  )
   const mainDiv: any = document.querySelector('[role=main]')
   // @ts-ignore
   mainDiv.style = 'position:relative'
