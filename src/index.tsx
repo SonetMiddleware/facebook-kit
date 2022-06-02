@@ -97,7 +97,7 @@ const handlePostImg = async (imgEle: HTMLImageElement, username: string) => {
     ReactDOM.render(
       <InlineTokenToolbar
         token={res.token}
-        originImgSrc={imgSrc}
+        originMediaSrc={imgSrc}
         username={username}
         app={APP_NAME}
       />,
