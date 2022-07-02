@@ -32,7 +32,7 @@ export const postEditorDraftContentSelector: () => LiveSelector<
   true
 > = () => {
   return querySelector<HTMLDivElement>(
-    `[class="notranslate _5rpu"][contenteditable][aria-label][spellcheck]`
+    `[contenteditable][aria-label][spellcheck]`
   )
 }
 
