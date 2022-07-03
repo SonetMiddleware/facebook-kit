@@ -54,7 +54,6 @@ export async function pasteTextToCompositionFacebook(text: string) {
     i.evaluate()!.focus()
     await delay(interval)
   }
-
   console.debug('[facebook-hook] dispatch paste event.....')
   if ('value' in document.activeElement!) {
     dispatchCustomEvents(i.evaluate()!, 'input', text)

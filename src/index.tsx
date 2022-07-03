@@ -72,7 +72,6 @@ function collectPostsFacebookInner() {
   )
 }
 
-collectPostsFacebookInner()
 const spanStyles =
   'position:absolute;padding:10px;right:0;top:0;text-align:center;background:#fff;'
 const className = 'plat-meta-span'
@@ -144,10 +143,6 @@ async function handleFacebookImg(node: DOMProxy) {
   }
 }
 
-// watch fullscreen post image
-const fullScreenImgWatcher = new MutationObserverWatcher(
-  Selectors.imageFullscreenSelector()
-)
 const handleFullscreenImgPost = async () => {
   const imgEle =
     fullScreenImgWatcher.firstDOMProxy.realCurrent?.querySelector('img')
@@ -173,11 +168,6 @@ const handleFullscreenImgPost = async () => {
   }
 }
 
-//@ts-ignore
-fullScreenImgWatcher.on('onChange', handleFullscreenImgPost)
-//@ts-ignore
-fullScreenImgWatcher.on('onAdd', handleFullscreenImgPost)
-
 export const PLAT_TWIN_OPEN = 'PLAT_TWIN_OPEN'
 
 function App() {
@@ -193,68 +183,6 @@ function App() {
     </div>
   )
 }
-const postForm = new LiveSelector().querySelectorAll<HTMLDivElement>(
-  '[role="dialog"] > form'
-)
-const postFormWatcher = new MutationObserverWatcher(postForm)
-//@ts-ignore
-postFormWatcher.on('onAdd', async () => {
-  console.debug('[facebook-hook] postFormWatcher onAdd ...')
-  //TODO better way to find this div
-  const emojiDiv =
-    document.querySelector('[aria-label="Emoji"]') ||
-    document.querySelector('[aria-label="表情"]')
-  const divParent = emojiDiv?.parentElement?.parentElement
-  //@ts-ignore
-  const divParentStyles = 'position:relative;display:flex;align-items:center;'
-  divParent!.style.cssText = divParentStyles
-  const dom = document.createElement('span')
-  dom.style.cssText = 'margin-left:10px;cursor:pointer;'
-  ReactDOM.render(<App />, dom)
-  divParent?.appendChild(dom)
-})
-
-//watch and add user id
-const idWatcher = new MutationObserverWatcher(
-  Selectors.myUsernameLiveSelectorPC()
-)
-
-let userId = ''
-//@ts-ignore
-idWatcher.on('onAdd', async () => {
-  const idDom =
-    idWatcher.firstDOMProxy.current.parentElement?.querySelector('a')
-  if (idDom) {
-    //@ts-ignore
-    const href = idDom.href
-    const id = getUserID(href)
-    userId = id || ''
-    console.debug('[facebook-hook] app account: ', userId)
-    saveLocal(StorageKeys.FACEBOOK_ID, userId)
-  }
-})
-
-const bindBoxId = 'plattwin-bind-box'
-const mainWatcher = new MutationObserverWatcher(Selectors.mainContentSelector())
-//@ts-ignore
-mainWatcher.on('onAdd', () => {
-  // handle share on initial
-  postShareHandler(APP_NAME)
-  console.debug(
-    '[facebook-hook] mainWatcher onAdd: ',
-    mainWatcher.firstDOMProxy
-  )
-  const mainDiv: any = document.querySelector('[role=main]')
-  // @ts-ignore
-  mainDiv.style = 'position:relative'
-  const dom: any = document.createElement('div')
-  dom.id = bindBoxId
-  dom.style = 'position:absolute;top:0;right:0;'
-  ReactDOM.render(<InlineApplicationBindBox app={APP_NAME} />, dom)
-  mainDiv.click()
-  mainDiv?.appendChild(dom)
-  mainWatcher.stopWatch()
-})
 
 const handlePostBindingEvent = async (e: any) => {
   const { contentId } = e.detail
@@ -292,21 +220,84 @@ async function getBindingContent() {
   }
 }
 
-function getUserPage(meta: { appid?: string }) {
-  const { appid } = meta
-  const host = getConfig().hostLeadingUrl
-  return `${host}/${appid ? appid : ''}`
-}
-export function getConfig() {
-  return {
-    hostIdentifier: 'facebook.com',
-    hostLeadingUrl: 'https://www.facebook.com',
-    hostLeadingUrlMobile: 'https://m.facebook.com',
-    icon: 'images/facebook.png'
-  }
+let userId = ''
+// apply watchers
+let fullScreenImgWatcher: any = null,
+  postFormWatcher: any = null,
+  idWatcher: any = null,
+  mainWatcher: any = null
+
+const initWatchers = () => {
+  fullScreenImgWatcher = new MutationObserverWatcher(
+    Selectors.imageFullscreenSelector()
+  )
+  const postForm = new LiveSelector().querySelectorAll<HTMLDivElement>(
+    '[role="dialog"] > form'
+  )
+  postFormWatcher = new MutationObserverWatcher(postForm)
+  idWatcher = new MutationObserverWatcher(Selectors.myUsernameLiveSelectorPC())
+  mainWatcher = new MutationObserverWatcher(Selectors.mainContentSelector())
+
+  //@ts-ignore
+  fullScreenImgWatcher.on('onChange', handleFullscreenImgPost)
+  //@ts-ignore
+  fullScreenImgWatcher.on('onAdd', handleFullscreenImgPost)
+
+  //@ts-ignore
+  postFormWatcher.on('onAdd', async () => {
+    console.debug('[facebook-hook] postFormWatcher onAdd ...')
+    //TODO better way to find this div
+    const emojiDiv =
+      document.querySelector('[aria-label="Emoji"]') ||
+      document.querySelector('[aria-label="表情"]')
+    const divParent = emojiDiv?.parentElement?.parentElement
+    //@ts-ignore
+    const divParentStyles = 'position:relative;display:flex;align-items:center;'
+    divParent!.style.cssText = divParentStyles
+    const dom = document.createElement('span')
+    dom.style.cssText = 'margin-left:10px;cursor:pointer;'
+    ReactDOM.render(<App />, dom)
+    divParent?.appendChild(dom)
+  })
+
+  //@ts-ignore
+  idWatcher.on('onAdd', async () => {
+    const idDom =
+      idWatcher.firstDOMProxy.current.parentElement?.querySelector('a')
+    if (idDom) {
+      //@ts-ignore
+      const href = idDom.href
+      const id = getUserID(href)
+      userId = id || ''
+      console.debug('[facebook-hook] app account: ', userId)
+      saveLocal(StorageKeys.FACEBOOK_ID, userId)
+    }
+  })
+
+  const bindBoxId = 'plattwin-bind-box'
+  //@ts-ignore
+  mainWatcher.on('onAdd', () => {
+    // handle share on initial
+    postShareHandler(APP_NAME)
+    console.debug(
+      '[facebook-hook] mainWatcher onAdd: ',
+      mainWatcher.firstDOMProxy
+    )
+    const mainDiv: any = document.querySelector('[role=main]')
+    // @ts-ignore
+    mainDiv.style = 'position:relative'
+    const dom: any = document.createElement('div')
+    dom.id = bindBoxId
+    dom.style = 'position:absolute;top:0;right:0;'
+    ReactDOM.render(<InlineApplicationBindBox app={APP_NAME} />, dom)
+    mainDiv.click()
+    mainDiv?.appendChild(dom)
+    mainWatcher.stopWatch()
+  })
 }
 
 function main() {
+  initWatchers()
   collectPostsFacebookInner()
   startWatch(fullScreenImgWatcher)
   startWatch(postFormWatcher)
@@ -340,6 +331,20 @@ function main() {
 }
 
 export default main
+
+function getUserPage(meta: { appid?: string }) {
+  const { appid } = meta
+  const host = getConfig().hostLeadingUrl
+  return `${host}/${appid ? appid : ''}`
+}
+export function getConfig() {
+  return {
+    hostIdentifier: 'facebook.com',
+    hostLeadingUrl: 'https://www.facebook.com',
+    hostLeadingUrlMobile: 'https://m.facebook.com',
+    icon: 'images/facebook.png'
+  }
+}
 
 export const init = () => {
   registerApplication({
