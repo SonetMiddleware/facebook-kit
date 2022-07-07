@@ -62,7 +62,7 @@ export async function pasteTextToCompositionFacebook(text: string) {
   }
 }
 
-export const pasteShareTextToEditor = async (str?: string) => {
+export const pasteShareTextToEditor = async (str: string, img?: Blob) => {
   const text = str || POST_SHARE_TEXT
   await pasteTextToCompositionFacebook(text)
 }
