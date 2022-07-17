@@ -4,7 +4,11 @@ import {
   hasFocus,
   untilElementAvailable
 } from './selectors'
-import { dispatchCustomEvents, POST_SHARE_TEXT } from '@soda/soda-core-ui'
+import {
+  dispatchCustomEvents,
+  POST_SHARE_TEXT,
+  pasteImageToActiveElements
+} from '@soda/soda-core-ui'
 
 export const delay = async (time: number) => {
   return new Promise((resolve, reject) => {
@@ -39,7 +43,7 @@ export function untilDocumentReady() {
     document.addEventListener('readystatechange', callback, { passive: true })
   })
 }
-export async function pasteTextToCompositionFacebook(text: string) {
+export async function pasteTextToCompositionFacebook(text: string, img?: Blob) {
   const interval = 500
   if (!hasEditor()) {
     await delay(300)
@@ -60,9 +64,14 @@ export async function pasteTextToCompositionFacebook(text: string) {
   } else {
     dispatchCustomEvents(i.evaluate()!, 'paste', text)
   }
+  // if (img) {
+  //   i.evaluate()!.focus()
+  //   console.log('[extension-twitter] pasting img...', i.evaluate())
+  //   await pasteImageToActiveElements(img)
+  // }
 }
 
 export const pasteShareTextToEditor = async (str: string, img?: Blob) => {
   const text = str || POST_SHARE_TEXT
-  await pasteTextToCompositionFacebook(text)
+  await pasteTextToCompositionFacebook(text, img)
 }
