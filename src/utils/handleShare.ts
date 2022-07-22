@@ -4,11 +4,7 @@ import {
   hasFocus,
   untilElementAvailable
 } from './selectors'
-import {
-  dispatchCustomEvents,
-  POST_SHARE_TEXT,
-  pasteImageToActiveElements
-} from '@soda/soda-core-ui'
+import { message } from 'antd'
 
 export const delay = async (time: number) => {
   return new Promise((resolve, reject) => {
@@ -43,7 +39,9 @@ export function untilDocumentReady() {
     document.addEventListener('readystatechange', callback, { passive: true })
   })
 }
-export async function pasteTextToCompositionFacebook(text: string, img?: Blob) {
+export const shareToEditor = async (content?: Array<string | Blob>) => {
+  if (!content) return
+
   const interval = 500
   if (!hasEditor()) {
     await delay(300)
@@ -59,19 +57,29 @@ export async function pasteTextToCompositionFacebook(text: string, img?: Blob) {
     await delay(interval)
   }
   console.debug('[facebook-hook] dispatch paste event.....')
-  if ('value' in document.activeElement!) {
-    dispatchCustomEvents(i.evaluate()!, 'input', text)
-  } else {
-    dispatchCustomEvents(i.evaluate()!, 'paste', text)
+  let copied = false
+  for (const c of content) {
+    if (!c) continue
+    if (typeof c === 'string') {
+      //@ts-ignore
+      await navigator.clipboard.writeText(c)
+      copied = true
+    } else {
+      const clipboardData = []
+      //@ts-ignore
+      clipboardData.push(new ClipboardItem({ 'image/png': c }))
+      //@ts-ignore
+      await navigator.clipboard.write(clipboardData)
+      copied = true
+    }
   }
-  // if (img) {
-  //   i.evaluate()!.focus()
-  //   console.log('[extension-twitter] pasting img...', i.evaluate())
-  //   await pasteImageToActiveElements(img)
-  // }
-}
-
-export const pasteShareTextToEditor = async (str: string, img?: Blob) => {
-  const text = str || POST_SHARE_TEXT
-  await pasteTextToCompositionFacebook(text, img)
+  if (copied) {
+    // trigger document focus
+    // ref.current?.click();
+    document.body.click()
+    message.success(
+      'Your message has been saved to the clipboard. Please paste into the new post dialog.',
+      5
+    )
+  }
 }

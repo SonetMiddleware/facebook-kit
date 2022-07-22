@@ -16,6 +16,7 @@
     "@dimensiondev/holoflows-kit": "^0.8.0-20210429202414-74fb9a1",
     "@soda/soda-core": "workspace:^0.0.1",
     "@soda/soda-core-ui": "workspace:^0.0.1",
+    "@soda/soda-event-util": "workspace:^0.0.1",
     "@soda/soda-util": "workspace:^0.0.1",
     "antd": "^4.19.3",
     "babel-plugin-file-loader": "^2.0.0",

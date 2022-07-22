@@ -21,8 +21,6 @@ import {
   InlineTokenToolbar,
   InlineApplicationBindBox,
   saveLocal,
-  dispatchPaste,
-  CustomEventId,
   postShareHandler,
   removeTextInSharePost
 } from '@soda/soda-core-ui'
@@ -32,7 +30,7 @@ import { getUserID } from './utils/getProfileIdentifier'
 
 import { message } from 'antd'
 import Logo from './assets/images/logo.png'
-import { newPostTrigger, pasteShareTextToEditor } from './utils/handleShare'
+import { newPostTrigger, shareToEditor } from './utils/handleShare'
 import { getFacebookId, StorageKeys } from './utils/utils'
 
 const APP_NAME = 'Facebook'
@@ -304,30 +302,12 @@ function main() {
 
   const div = document.createElement('div')
   document.body.appendChild(div)
-  ReactDOM.render(
-    <ResourceDialog app={APP_NAME} publishFunc={pasteShareTextToEditor} />,
-    div
-  )
+  ReactDOM.render(<ResourceDialog shareCallback={shareToEditor} />, div)
 
   startWatch(idWatcher)
   startWatch(mainWatcher)
 
   document.addEventListener('PostBinding', handlePostBindingEvent)
-
-  const { apply } = Reflect
-  document.addEventListener(CustomEventId, (e) => {
-    const ev = e as CustomEvent<string>
-    const [eventName, param, selector]: [keyof any, any[], string] = JSON.parse(
-      ev.detail
-    )
-    switch (eventName) {
-      case 'paste':
-        return apply(dispatchPaste, null, param)
-
-      default:
-        console.error(eventName, 'not handled')
-    }
-  })
 }
 
 export default main
@@ -354,7 +334,7 @@ export const init = () => {
       getUserPage,
       getConfig,
       newPostTrigger,
-      pasteShareTextToEditor
+      shareToEditor
     }
   })
 }
