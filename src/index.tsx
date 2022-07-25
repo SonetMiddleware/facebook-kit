@@ -275,8 +275,6 @@ const initWatchers = () => {
   const bindBoxId = 'plattwin-bind-box'
   //@ts-ignore
   mainWatcher.on('onAdd', () => {
-    // handle share on initial
-    postShareHandler(APP_NAME)
     console.debug(
       '[facebook-hook] mainWatcher onAdd: ',
       mainWatcher.firstDOMProxy
@@ -306,6 +304,9 @@ function main() {
 
   startWatch(idWatcher)
   startWatch(mainWatcher)
+
+  // handle share on initial
+  postShareHandler(APP_NAME)
 
   document.addEventListener('PostBinding', handlePostBindingEvent)
 }
