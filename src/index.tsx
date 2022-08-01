@@ -284,10 +284,10 @@ const initWatchers = () => {
     mainDiv.style = 'position:relative'
     const dom: any = document.createElement('div')
     dom.id = bindBoxId
-    dom.style = 'position:absolute;top:0;right:0;'
+    dom.style = 'position:fixed;top:0;right:0;'
     ReactDOM.render(<InlineApplicationBindBox app={APP_NAME} />, dom)
-    mainDiv.click()
-    mainDiv?.appendChild(dom)
+    document.body.click()
+    document.body.appendChild(dom)
     mainWatcher.stopWatch()
   })
 }
